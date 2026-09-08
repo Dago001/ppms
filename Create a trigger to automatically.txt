@@ -1,0 +1,109 @@
+Create a trigger to automatically log posting changes:
+
+
+DELIMITER //
+CREATE TRIGGER after_posting_update 
+AFTER UPDATE ON postings
+FOR EACH ROW
+BEGIN
+    IF OLD.formation_id != NEW.formation_id THEN
+        INSERT INTO posting_audit_trail (
+            posting_id, 
+            service_number, 
+            field_changed, 
+            old_value, 
+            new_value, 
+            changed_by
+        ) VALUES (
+            NEW.id,
+            NEW.service_number,
+            'formation_id',
+            OLD.formation_id,
+            NEW.formation_id,
+            @current_user_id
+        );
+    END IF;
+    
+    IF OLD.location != NEW.location THEN
+        INSERT INTO posting_audit_trail (
+            posting_id, 
+            service_number, 
+            field_changed, 
+            old_value, 
+            new_value, 
+            changed_by
+        ) VALUES (
+            NEW.id,
+            NEW.service_number,
+            'location',
+            OLD.location,
+            NEW.location,
+            @current_user_id
+        );
+    END IF;
+END;//
+DELIMITER ;
+
+
+
+2. Create an audit trail table for tracking posting changes:
+
+CREATE TABLE posting_audit_trail (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    posting_id INT NOT NULL,
+    service_number VARCHAR(50) NOT NULL,
+    field_changed VARCHAR(50) NOT NULL,
+    old_value TEXT,
+    new_value TEXT,
+    changed_by INT NOT NULL,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (posting_id) REFERENCES postings(id),
+    FOREIGN KEY (service_number) REFERENCES personnel(service_number),
+    FOREIGN KEY (changed_by) REFERENCES users(id)
+);
+
+-- Add indexes for better performance
+CREATE INDEX idx_posting_audit_service_number ON posting_audit_trail(service_number);
+CREATE INDEX idx_posting_audit_changed_at ON posting_audit_trail(changed_at);
+
+
+
+3.Add indexes to existing tables for better performance:
+
+-- Add indexes to personnel table
+ALTER TABLE personnel
+ADD INDEX idx_rank (rank),
+ADD INDEX idx_gender (gender),
+ADD INDEX idx_date_of_birth (date_of_birth);
+
+-- Add indexes to postings table
+ALTER TABLE postings
+ADD INDEX idx_posting_status (posting_status),
+ADD INDEX idx_location (location),
+ADD INDEX idx_formation_id (formation_id);
+
+-- Add indexes to activity_logs table
+ALTER TABLE activity_logs
+ADD INDEX idx_created_at (created_at),
+ADD INDEX idx_user_activity (user_id, created_at);
+
+
+3. Create a view for easy access to current postings with personnel details:
+
+CREATE VIEW vw_current_postings AS
+SELECT 
+    p.service_number,
+    p.rank,
+    p.gender,
+    p.date_of_birth,
+    po.id as posting_id,
+    po.formation_id,
+    f.formation_type,
+    po.location,
+    po.posting_status,
+    po.start_date,
+    po.end_date
+FROM personnel p
+JOIN postings po ON p.service_number = po.service_number
+JOIN formations f ON po.formation_id = f.id
+WHERE po.posting_status = 'Active';

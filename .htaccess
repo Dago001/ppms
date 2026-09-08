@@ -1,0 +1,17 @@
+# ============================================
+# NIS-PPMS Extensionless Routing & Apache Security Engine
+# ============================================
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Do not rewrite existing physical files or directories
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Explicit route for reports
+    RewriteRule ^reports/?$ reports.php [L,QSA]
+
+    # Route extensionless URLs internally to corresponding .php files
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^(.*)$ $1.php [L,QSA]
+</IfModule>

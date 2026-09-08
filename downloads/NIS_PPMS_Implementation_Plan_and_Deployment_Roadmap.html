@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIS-PPMS Enterprise Implementation Plan & Deployment Roadmap</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @page { size: A4; margin: 20mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Segoe UI", Arial, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; padding: 2rem; }
+        .manual-container { max-width: 900px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 3rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; position: relative; }
+        .header-box { text-align: center; border-bottom: 3px double #1a5632; padding-bottom: 1.5rem; margin-bottom: 2rem; }
+        .header-box img { height: 85px; margin-bottom: 0.5rem; }
+        .header-box h1 { color: #1a5632; font-size: 1.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .header-box h2 { color: #0f172a; font-size: 1.2rem; font-weight: 600; margin-top: 0.2rem; }
+        .header-box p { color: #d97706; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 0.5rem; }
+        
+        .toolbar { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 0.75rem 1.25rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid #cbd5e1; }
+        .toolbar-title { font-size: 0.85rem; font-weight: 600; color: #334155; }
+        .toolbar-btns { display: flex; gap: 0.5rem; }
+        .btn-download { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; background: #1a5632; color: #fff; text-decoration: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-download:hover { background: #145226; }
+        .btn-secondary { background: #475569; }
+        .btn-secondary:hover { background: #334155; }
+
+        h2 { color: #1a5632; font-size: 1.3rem; margin-top: 2rem; margin-bottom: 0.8rem; border-left: 4px solid #1a5632; padding-left: 0.6rem; }
+        h3 { color: #0f172a; font-size: 1.05rem; margin-top: 1.2rem; margin-bottom: 0.5rem; }
+        p, li { font-size: 0.9rem; color: #334155; margin-bottom: 0.75rem; }
+        ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+        li { margin-bottom: 0.4rem; }
+        
+        table { width: 100%; border-collapse: collapse; margin: 1.2rem 0; font-size: 0.85rem; }
+        th, td { border: 1px solid #cbd5e1; padding: 0.65rem 0.85rem; text-align: left; }
+        th { background: #f8fafc; color: #1a5632; font-weight: 600; }
+        tr:nth-child(even) { background: #f8fafc; }
+        
+        code { background: #f1f5f9; color: #0f172a; padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace; font-size: 0.85rem; }
+        
+        .alert-box { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 0.85rem 1.1rem; border-radius: 6px; margin: 1.2rem 0; font-size: 0.85rem; color: #92400e; }
+        .alert-box.danger { background: #fef2f2; border-color: #ef4444; color: #991b1b; }
+        
+        @media print {
+            body { padding: 0; background: #fff; }
+            .manual-container { box-shadow: none; border: none; padding: 0; }
+            .toolbar { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="manual-container">
+    <div class="toolbar">
+        <div class="toolbar-title"><i class="fas fa-tasks"></i> NIS-PPMS Implementation Plan (90-Day Roadmap)</div>
+        <div class="toolbar-btns">
+            <button onclick="window.print();" class="btn-download"><i class="fas fa-print"></i> Print / Save as PDF</button>
+            <a href="NIS_PPMS_Implementation_Plan_and_Deployment_Roadmap.md" download class="btn-download btn-secondary"><i class="fas fa-file-download"></i> Download Markdown (.md)</a>
+        </div>
+    </div>
+    
+    <div class="header-box">
+        <img src="../assets/images/logo.png" alt="NIS Logo" onerror="this.src='../assets/images/logo2.png';">
+        <h1>Nigeria Immigration Service</h1>
+        <h2>Personnel Posting Management System (NIS-PPMS)</h2>
+        <p>Phase-by-Phase Implementation Plan & Deployment Roadmap</p>
+    </div>
+
+
+<div class="alert-box danger"><strong>RESTRICTED NOTICE:</strong> <strong>RESTRICTED IMPLEMENTATION DOCUMENT</strong>
+> This operational implementation plan outlines the strategic, technical, and human resource roadmap for deploying the NIS-PPMS platform across Service Headquarters (SHQ), 8 Zonal Commands, 36 State Commands, Seaport Commands, Airport Commands, and Border Patrol Posts.</div>
+
+---
+
+<h2>Executive Summary & Timeline Overview</h2>
+
+The <strong>NIS-PPMS Enterprise Rollout Plan</strong> is structured as a <strong>90-Day (13-Week) Phased Implementation Program</strong>. It balances infrastructure readiness, data integrity validation, capacity building, administrative training, and change management to guarantee seamless adoption across all paramilitary formations without interrupting ongoing service operations.
+
+``<code>mermaid
+gantt
+    title NIS-PPMS 90-Day Master Deployment Schedule
+    dateFormat  X
+    axisFormat Day %d
+
+    section Phase 1: Prep & Data
+    Infra & DB Provisioning       :active, p1, 1, 14d
+    Data Cleaning & Migration     :active, p1b, 7, 14d
+
+    section Phase 2: SHQ & Pilot
+    SHQ HRM Admin Training        :p2, 15, 22d
+    SHQ Pilot Deployment          :p2b, 23, 30d
+
+    section Phase 3: Zones & Commands
+    Zonal HQ & Command Training   :p3, 31, 48d
+    Nationwide Command Rollout    :p3b, 49, 60d
+
+    section Phase 4: Field Posts
+    Border & Special Unit Onboarding:p4, 61, 75d
+
+    section Phase 5: Go-Live
+    Parallel Run & Cutover        :p5, 76, 85d
+    Full System Handover          :p5b, 86, 90d
+</code>`<code>
+
+---
+
+<h2>Master Implementation Schedule (90 Days Total)</h2>
+
+<tr><td>Phase</td><td>Phase Title</td><td>Target Audience / Module</td><td>Duration</td><td>Timeline</td></tr>
+
+<tr><td><strong>Phase 1</strong></td><td>System Provisioning & Data Migration</td><td>Infrastructure, Security & Database Teams</td><td><strong>14 Days</strong></td><td>Days 1 – 14</td></tr>
+<tr><td><strong>Phase 2</strong></td><td>SHQ HRM Training & Pilot Deployment</td><td>SHQ Directorate of HRM & Service Leadership</td><td><strong>16 Days</strong></td><td>Days 15 – 30</td></tr>
+<tr><td><strong>Phase 3</strong></td><td>Zonal HQ & State Command Rollout</td><td>8 Zonal HQs & 36 State Command Officers</td><td><strong>30 Days</strong></td><td>Days 31 – 60</td></tr>
+<tr><td><strong>Phase 4</strong></td><td>Field Formations & Specialized Units</td><td>Border Posts, Marine Commands, Airports</td><td><strong>15 Days</strong></td><td>Days 61 – 75</td></tr>
+<tr><td><strong>Phase 5</strong></td><td>Parallel Run, Cutover & Full Go-Live</td><td>Nationwide System Handover & Operational Support</td><td><strong>15 Days</strong></td><td>Days 76 – 90</td></tr>
+
+---
+
+<h2>Detailed Phase Breakdown</h2>
+
+<h3>Phase 1: Infrastructure Readiness, Data Cleaning & System Provisioning</h3>
+<strong>Duration</strong>: 14 Days (Days 1 – 14)  
+<strong>Objective</strong>: Establish secure enterprise hosting, clean legacy deployment databases, and verify security protocols.
+
+</code>`<code>mermaid
+flowchart LR
+    A["Day 1-4: Server Provisioning"] --> B["Day 5-8: DB Encryption & Indexing"]
+    B --> C["Day 9-12: Data Sanitization"]
+    C --> D["Day 13-14: Security Audit & Pre-Flight Testing"]
+</code>`<code>
+
+#### Key Tasks & Schedule:
+<ul><li><strong>Days 1 – 4</strong>: Provision primary and backup enterprise web servers (PHP 8.2+, MariaDB 10.6+), install SSL/TLS encryption certificates, and configure firewall parameters.</li>
+<li><strong>Days 5 – 8</strong>: Database schema creation (</code>tbl_emppersonal<code>, </code>tbl_employment<code>, </code>posting_history<code>, </code>disciplinary_board<code>, </code>user_zones<code>), index optimization, and PWA offline Service Worker testing.</li>
+<li><strong>Days 9 – 12</strong>: Legacy personnel record extraction, CSV data cleaning, verification of Service Numbers, DOB, DOFA, and current posting locations.</li>
+<li><strong>Days 13 – 14</strong>: Security vulnerability audit (IDOR tokens, 2FA, CSP headers, rate-limiting) and staging environment sign-off.</li>
+
+#### Phase 1 Deliverables:
+<li>Hardened production web environment (</code>https://nisposting.gov.ng<code>).</li>
+<li>Sanitized personnel database roster ready for deployment.</li>
+<li>Technical Infrastructure Readiness Certificate.</li>
+
+---
+
+<h3>Phase 2: Service Headquarters (SHQ) HRM Training & Pilot Deployment</h3>
+<strong>Duration</strong>: 16 Days (Days 15 – 30)  
+<strong>Objective</strong>: Train SHQ Human Resource Management (HRM) Directorate, Board Secretaries, and Super Admin personnel; execute pilot posting operations at Headquarters.
+
+</code>`<code>mermaid
+flowchart TD
+    A["Day 15-18: SHQ Super Admin & ICT Setup"] --> B["Day 19-22: HRM Directorate Hands-On Training"]
+    B --> C["Day 23-27: SHQ Pilot Posting Operations"]
+    C --> D["Day 28-30: Pilot Review & Workflow Refinement"]
+</code>`<code>
+
+#### Key Tasks & Schedule:
+<li><strong>Days 15 – 18: System Administrator & ICT Training</strong>:</li>
+  * Onboard Super Admins and ICT Security Officers.
+  * Setup 2FA credentials, user account provisioning, role definitions, and audit log monitoring protocols.
+<li><strong>Days 19 – 22: SHQ HRM Section Personnel Training</strong>:</li>
+  * Intensive hands-on workshop for HRM Directorate officers, Posting Board Desk Officers, and Disciplinary Review Officers.
+  * <strong>Curriculum</strong>: Single posting updates (</code>/edit_posting<code>), posting order reference numbers, document PDF uploads, Disciplinary Board locking (</code>/disciplinary<code>), and 5+ year over-stay recommendation reports (</code>/analytics<code>).
+<li><strong>Days 23 – 27: SHQ Pilot Deployment Run</strong>:</li>
+  * Execute real live pilot posting batch using recent SHQ posting orders.
+  * Validate automated multi-channel dispatch (SMS, Email, and Destination Command Bell Alerts).
+<li><strong>Days 28 – 30: Pilot Evaluation & Refinement</strong>:</li>
+  * Review user feedback from HRM Desk Officers, adjust operational parameters, and issue SHQ System User Certifications.
+
+#### Phase 2 Deliverables:
+<li>Fully certified SHQ HRM operational workforce.</li>
+<li>Active SHQ pilot deployment in production.</li>
+<li>Disciplinary Board module populated with initial active case records.</li>
+
+---
+
+<h3>Phase 3: Zonal Headquarters & State Command Officer Training & Deployment</h3>
+<strong>Duration</strong>: 30 Days (Days 31 – 60)  
+<strong>Objective</strong>: Train Zonal Command Officers across all 8 NIS Zones (Zones A through H) and 36 State Commands; roll out localized access control.
+
+</code>`<code>mermaid
+flowchart TD
+    A["Days 31-38: Zone A & B Regional Workshops"] --> B["Days 39-46: Zone C & D Regional Workshops"]
+    B --> C["Days 47-54: Zone E, F, G, H Regional Workshops"]
+    C --> D["Days 55-60: Command Scope Activation & Local Pilot"]
+</code>`<code>
+
+#### Key Tasks & Schedule:
+<li><strong>Days 31 – 38: Zone A (Ikeja) & Zone B (Kaduna) Training Workshops</strong>:</li>
+  * Conduct regional training for Zonal Command Officers, State Command Desk Officers (Lagos, Ogun, Kano, Kaduna, Sokoto, Katsina, etc.).
+  * <strong>Training Focus</strong>: Command Dashboard filtering, receiving incoming posting notifications, 30-day assumption of duty confirmation, and localized personnel verification.
+<li><strong>Days 39 – 46: Zone C (Bauchi) & Zone D (Minna) Training Workshops</strong>:</li>
+  * Train Command Officers across Borno, Adamawa, Plateau, Niger, Kwara, FCT Command, etc.
+<li><strong>Days 47 – 54: Zone E (Owerri), Zone F (Ibadan), Zone G (Benin) & Zone H (Makurdi) Workshops</strong>:</li>
+  * Complete zonal training for Rivers, Akwa Ibom, Oyo, Ondo, Edo, Anambra, Benue, Nasarawa Commands.
+<li><strong>Days 55 – 60: Command Scope Activation & Zone Verification</strong>:</li>
+  * Provision command-specific user accounts (</code>user_zones<code>), linking each Command Officer strictly to their assigned geographical scope.
+  * Execute test incoming posting confirmations across all 36 State Commands.
+
+#### Phase 3 Deliverables:
+<li>8 Zonal Headquarters and 36 State Commands onboarded to NIS-PPMS.</li>
+<li>Command-level role assignments and secure user credentials issued.</li>
+<li>Regional deployment certification sign-offs.</li>
+
+---
+
+<h3>Phase 4: Border Posts, Marine Commands & Specialized Unit Onboarding</h3>
+<strong>Duration</strong>: 15 Days (Days 61 – 75)  
+<strong>Objective</strong>: Deploy NIS-PPMS PWA offline mode to remote Border Control Posts, Marine Commands, International Airports, and Training Colleges.
+
+</code>`<code>mermaid
+flowchart LR
+    A["Day 61-65: PWA & Offline Setup"] --> B["Day 66-70: Border & Seaport Deployment"]
+    B --> C["Day 71-75: Special Units & Airfields"]
+</code>`<code>
+
+#### Key Tasks & Schedule:
+<li><strong>Days 61 – 65: Offline PWA & Low-Bandwidth Provisioning</strong>:</li>
+  * Configure Progressive Web App (PWA) offline Service Workers (</code>sw.js<code>) and asset caching for remote border posts with low network connectivity.
+  * Install building interface UI (</code>offline.html<code>) and local caching mechanisms.
+<li><strong>Days 66 – 70: Land Border & Marine Command Rollout</strong>:</li>
+  * Onboard command officers at Seme Border, Idiroko Border, Illela Border, Jibia Border, Mfum Border, Lagos Marine Command, and Rivers Marine Onne.
+<li><strong>Days 71 – 75: International Airports & Special Institutions</strong>:</li>
+  * Deploy access for MMIA Lagos, Nnamdi Azikiwe International Airport Abuja, Immigration Training School Kano (ITSK), and Staff College Command.
+
+#### Phase 4 Deliverables:
+<li>Operational connectivity across all strategic Land Borders, Seaports, and Airports.</li>
+<li>PWA Offline Mode active across remote border commands.</li>
+
+---
+
+<h3>Phase 5: Nationwide Parallel Run, Full Go-Live & Post-Deployment Support</h3>
+<strong>Duration</strong>: 15 Days (Days 76 – 90)  
+<strong>Objective</strong>: Execute 10-day dual/parallel posting run, cut over completely to digital-only operations, and establish standing technical support.
+
+</code>`<code>mermaid
+flowchart TD
+    A["Days 76-85: Nationwide Parallel Run"] --> B["Day 86: Complete Digital Cutover"]
+    B --> C["Days 87-90: Operational Handover & Standing Helpdesk"]
+</code>`<code>
+
+#### Key Tasks & Schedule:
+<li><strong>Days 76 – 85: Nationwide Parallel Run</strong>:</li>
+  * Operate NIS-PPMS alongside legacy manual paper registers for 10 consecutive days.
+  * Perform daily data reconciliation between physical posting orders and digital records to ensure 100% data consistency.
+<li><strong>Day 86: Official Digital Cutover (GO-LIVE)</strong>:</li>
+  * Formal decommission of paper-based posting approvals.
+  * All posting orders, bulk reassignments, and assumption of duty confirmations transitioned exclusively to NIS-PPMS.
+<li><strong>Days 87 – 90: Post-Implementation Support & Handover</strong>:</li>
+  * Activate 24/7 NIS ICT Technical Helpdesk support.
+  * Deliver final System Compliance Report to the Comptroller General of Immigration Service (CGIS).
+
+#### Phase 5 Deliverables:
+<li>Full nationwide Go-Live transition to digital NIS-PPMS.</li>
+<li>Decommissioning of legacy manual posting registers.</li>
+<li>Final Project Completion & Handover Report.</li>
+
+---
+
+<h2>Operational Resource Allocation & Change Management</h2>
+
+<h3>1. Hardware & Connectivity Requirements:</h3>
+<li><strong>Service Headquarters</strong>: Enterprise Dedicated Server, High-speed fiber optic connection, dual UPS power backup.</li>
+<li><strong>Zonal & State Commands</strong>: Standard Desktop/Laptop Workstations, 4G LTE Wi-Fi Routers, document scanners for order PDFs.</li>
+<li><strong>Border Control Posts</strong>: Tablet/Mobile devices supporting PWA Offline caching for offline personnel lookup.</li>
+
+<h3>2. Training Strategy & Methodology:</h3>
+<li><strong>Train-the-Trainer (TTT)</strong>: High-performing ICT officers trained during Phase 2 serve as Assistant Lead Trainers for Phase 3 regional workshops.</li>
+<li><strong>Interactive Practical Simulations</strong>: Every participant executes 5 live scenarios (Adding Officer, Disciplinary Lock, Single Posting, Bulk CSV Upload, and Watermarked Report Printing).</li>
+<li><strong>Reference Materials</strong>: Physical and digital copies of the <strong>NIS-PPMS Official User Manual & Operational Guide</strong> distributed to all participants.</li></ul>
+
+<h3>3. Risk Management & Contingency Plan:</h3>
+
+<tr><td>Potential Risk</td><td>Impact Level</td><td>Risk Prevention & Mitigation Strategy</td></tr>
+
+<tr><td><strong>Network Outage at Remote Border Posts</strong></td><td>Medium</td><td>PWA Offline Mode (</code>sw.js`) automatically serves cached officer data and queuing requests until connection restores.</td></tr>
+<tr><td><strong>Data Entry Errors during Bulk Upload</strong></td><td>High</td><td>System pre-validation check verifies Service Numbers and Disciplinary status before committing database transactions.</td></tr>
+<tr><td><strong>Resistance to Digital Transition</strong></td><td>Medium</td><td>Executive directive issued by CGIS enforcing mandatory digital posting reference numbers on all official movement orders.</td></tr>
+<tr><td><strong>User Credential Compromise</strong></td><td>High</td><td>Mandatory 2FA TOTP enforcement for Admin, Super Admin, and SHQ accounts.</td></tr>
+
+---
+
+<h3>Project Approval & Sign-Off</h3>
+*Implementation Plan Prepared for Nigeria Immigration Service &bull; NIS-PPMS Deployment v2.4*
+
+</div>
+</body>
+</html>

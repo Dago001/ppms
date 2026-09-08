@@ -1,0 +1,24 @@
+# NIS-PPMS .gitignore
+
+# Temporary & Log Files
+error_log
+*.log
+.DS_Store
+Thumbs.db
+
+# Environment & Config Credentials
+.env
+config.local.php
+includes/custom_db_config.php
+includes/local_secrets.php
+
+# Uploaded Files & Temporary Storage (Keep directory structure)
+uploads/*
+!uploads/.gitkeep
+!uploads/.htaccess
+storage/logs/*
+!storage/logs/.gitkeep
+storage/ratelimit/*
+!storage/ratelimit/.gitkeep
+storage/cache/*
+!storage/cache/.gitkeep

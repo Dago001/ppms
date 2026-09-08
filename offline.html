@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIS-PPMS &bull; Offline Mode</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.55)), url('assets/images/tech_building.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .offline-card {
+            background: rgba(255, 255, 255, 0.94);
+            color: #1e293b;
+            max-width: 520px;
+            width: 100%;
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .offline-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+        }
+        .offline-badge {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #fef3c7;
+            color: #d97706;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+            font-size: 1.8rem;
+            border: 2px solid #fde68a;
+        }
+        .logo-img {
+            height: 60px;
+            width: auto;
+            margin-bottom: 1rem;
+        }
+        h2 {
+            color: #1a5632;
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        p {
+            color: #64748b;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        .action-btns {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.65rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background: #1a5632;
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background: #145226;
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        .status-box {
+            margin-top: 1.5rem;
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            font-size: 0.775rem;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-card">
+        <img src="assets/images/logo.png" alt="NIS Logo" class="logo-img" onerror="this.style.display='none';">
+        <div class="offline-badge">
+            📡
+        </div>
+        <h2>Offline Mode Active</h2>
+        <p>
+            You are currently working without an active network connection. The application is serving cached officer pages & offline data securely.
+        </p>
+
+        <div class="action-btns">
+            <button onclick="window.location.reload();" class="btn btn-primary">
+                🔄 Reconnect & Refresh
+            </button>
+            <a href="dashboard" class="btn btn-secondary">
+                🏠 Go to Dashboard
+            </a>
+        </div>
+
+        <div class="status-box" id="connectionStatus">
+            Network Status: <strong>Disconnected (Offline Storage Active)</strong>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus() {
+            const statusEl = document.getElementById('connectionStatus');
+            if (navigator.onLine) {
+                statusEl.innerHTML = 'Network Status: <strong style="color:#16a34a;">Connected (Online)</strong>';
+                window.location.reload();
+            } else {
+                statusEl.innerHTML = 'Network Status: <strong style="color:#d97706;">Disconnected (Offline Cache Active)</strong>';
+            }
+        }
+        window.addEventListener('online', updateStatus);
+        window.addEventListener('offline', updateStatus);
+    </script>
+</body>
+</html>

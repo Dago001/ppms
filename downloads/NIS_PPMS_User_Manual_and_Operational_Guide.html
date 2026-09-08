@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>NIS-PPMS Official Master User Manual & Operational Guide v2.4</title>
+    <style>
+        body { font-family: "Segoe UI", Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 950px; margin: 0 auto; padding: 2rem; background: #fff; }
+        h1 { color: #1a5632; border-bottom: 3px solid #1a5632; padding-bottom: 0.5rem; }
+        h2 { color: #0284c7; margin-top: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3rem; }
+        h3 { color: #334155; }
+        pre, code { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.2rem 0.4rem; font-family: monospace; font-size: 0.85rem; }
+        pre { padding: 1rem; overflow-x: auto; background: #0f172a; color: #38bdf8; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.85rem; }
+        th, td { border: 1px solid #cbd5e1; padding: 0.65rem 0.85rem; text-align: left; }
+        th { background: #f1f5f9; color: #1e293b; font-weight: 700; }
+        tr:nth-child(even) { background: #f8fafc; }
+        .alert { background: #fef2f2; border-left: 4px solid #ef4444; padding: 1rem; margin: 1rem 0; border-radius: 6px; color: #991b1b; }
+        @media print {
+            body { padding: 0; margin: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="margin-bottom: 1.5rem; text-align: right;">
+        <button onclick="window.print()" style="padding: 0.6rem 1.25rem; background: #1a5632; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">🖨️ Print / Download PDF</button>
+    </div>
+    # Nigeria Immigration Service (NIS)<br />
+## Personnel Posting Management System (NIS-PPMS)<br />
+### Official Master User Manual &amp; Operational Guide (v2.4)<br />
+<br />
+---<br />
+<br />
+&gt; [!IMPORTANT]<br />
+&gt; **RESTRICTED &amp; CLASSIFIED DOCUMENT**<br />
+&gt; This master operational guide is prepared for authorized Nigeria Immigration Service (NIS) personnel, Command Officers, Directorate Secretaries, and System Administrators. Unauthorized access, duplication, or distribution is strictly prohibited under Service Regulations.<br />
+<br />
+---<br />
+<br />
+## Table of Contents<br />
+1. [Executive Overview &amp; System Architecture](#1-executive-overview--system-architecture)<br />
+2. [User Roles &amp; Access Control Matrix (RBAC)](#2-user-roles--access-control-matrix-rbac)<br />
+3. [Authentication, 2FA &amp; Session Hardening](#3-authentication-2fa--session-hardening)<br />
+4. [Executive Dashboard &amp; Intelligence Cards](#4-executive-dashboard--intelligence-cards)<br />
+5. [Personnel Roster &amp; Advanced Search Engine](#5-personnel-roster--advanced-search-engine)<br />
+6. [Single Officer Posting Workflow &amp; Document Management](#6-single-officer-posting-workflow--document-management)<br />
+7. [Disciplinary Board &amp; Sensitive Posting Guards](#7-disciplinary-board--sensitive-posting-guards)<br />
+8. [Bulk CSV Posting Workflow &amp; Pre-Validation](#8-bulk-csv-posting-workflow--pre-validation)<br />
+9. [Analytics Hub &amp; 5+ Year Over-Stay Recommendation Engine](#9-analytics-hub--5-year-over-stay-recommendation-engine)<br />
+10. [Custom Reports &amp; Watermarked Classified Printing](#10-custom-reports--watermarked-classified-printing)<br />
+11. [Multi-Channel Notifications &amp; 30-Day Escalation Engine](#11-multi-channel-notifications--30-day-escalation-engine)<br />
+12. [Offline PWA Engine &amp; Building Background UI](#12-offline-pwa-engine--building-background-ui)<br />
+13. [System Administration, Formation Setup &amp; Security Audit Logs](#13-system-administration-formation-setup--security-audit-logs)<br />
+14. [System Settings Portal &amp; Global RESTful API Gateway](#14-system-settings-portal--global-restful-api-gateway)<br />
+15. [Role &amp; Granular Permission Management Portal](#15-role--granular-permission-management-portal)<br />
+<br />
+---<br />
+<br />
+## 1. Executive Overview &amp; System Architecture<br />
+<br />
+The **Nigeria Immigration Service Personnel Posting Management System (NIS-PPMS)** is an enterprise web application designed to track, analyze, deploy, and manage the nation-wide staffing of NIS personnel across Service Headquarters directorates, 8 Zonal Commands (Zones A through H), 36 State Commands, Seaport Commands, Airport Commands, and Border Control Posts.<br />
+<br />
+```mermaid<br />
+graph TD<br />
+    A[&quot;NIS-PPMS Enterprise Core&quot;] --&gt; B[&quot;Security &amp; 2FA Layer&quot;]<br />
+    A --&gt; C[&quot;Personnel Roster &amp; Search Engine&quot;]<br />
+    A --&gt; D[&quot;Posting Operations &amp; Order Docs&quot;]<br />
+    A --&gt; E[&quot;Disciplinary Board &amp; Posting Guards&quot;]<br />
+    A --&gt; F[&quot;Analytics &amp; 5+ Yr Over-Stay Engine&quot;]<br />
+    A --&gt; G[&quot;Classified Watermarked Printing&quot;]<br />
+    A --&gt; H[&quot;PWA Offline Engine &amp; Building UI&quot;]<br />
+    A --&gt; I[&quot;Multi-Channel Notifications &amp; 30-Day Escalation&quot;]<br />
+    A --&gt; J[&quot;Super Admin &amp; Admin System Settings Portal&quot;]<br />
+    A --&gt; K[&quot;Role &amp; Granular Permission Portal (/roles_permissions)&quot;]<br />
+    A --&gt; L[&quot;Global RESTful API Gateway (/api/v1/)&quot;]<br />
+```<br />
+<br />
+### Core Architectural Features<br />
+* **Extensionless Clean Routing**: Standard URL navigation without exposing `.php` file extensions (`/dashboard`, `/search`, `/analytics`, `/disciplinary`, `/system_settings`, `/roles_permissions`).<br />
+* **Role &amp; Granular Permission Portal**: Dedicated security management center (`roles_permissions.php`) under *Account &amp; System Help*, exclusive to Super Admins and System Administrators.<br />
+* **Super Admin &amp; Admin System Settings Portal**: Master control center (`system_settings.php`) strictly restricted to Admin &amp; Super Admin accounts (removed from Service HQ role).<br />
+* **Global RESTful API Gateway**: High-performance RESTful API (`/api/v1/`) enabling external applications worldwide to securely share and receive personnel, posting, and disciplinary data.<br />
+<br />
+---<br />
+<br />
+## 2. User Roles &amp; Access Control Matrix (RBAC)<br />
+<br />
+The application enforces a **Role-Based Access Control (RBAC)** security hierarchy with granular per-user overrides:<br />
+<br />
+| Module / Feature | Super Admin | Admin | Service HQ (SHQ) | Zone / Command Admin | User (Read-Only) |<br />
+| :--- | :---: | :---: | :---: | :---: | :---: |<br />
+| **Role &amp; Permission Portal (`/roles_permissions`)** | ✅ **Exclusive** | ✅ **Exclusive** | ❌ Blocked | ❌ Blocked | ❌ Blocked |<br />
+| **System Settings Portal (`/system_settings`)** | ✅ **Exclusive** | ✅ **Exclusive** | ❌ Blocked | ❌ Blocked | ❌ Blocked |<br />
+| **API Key Generation &amp; Revocation** | ✅ Allowed | ✅ Allowed | ❌ Blocked | ❌ Blocked | ❌ Blocked |<br />
+| **Maintenance Mode Control** | ✅ Allowed | ✅ Allowed | ❌ Blocked | ❌ Blocked | ❌ Blocked |<br />
+| **View Dashboard &amp; Metrics** | ✅ Full | ✅ Full | ✅ Full | ✅ Command Scope | ✅ Read-Only |<br />
+| **Search Personnel Records** | ✅ Full | ✅ Full | ✅ Full | ✅ Command Scope | ✅ Read-Only |<br />
+| **Update Single Posting (`/edit_posting`)** | ✅ Allowed | ✅ Allowed | ✅ Allowed | ❌ Blocked | ❌ Blocked |<br />
+| **Bulk CSV Posting (`/bulk_posting`)** | ✅ Allowed | ✅ Allowed | ✅ Allowed | ❌ Blocked | ❌ Blocked |<br />
+| **Disciplinary Board (`/disciplinary`)** | ✅ Full Access | ✅ Full Access | ✅ Full Access | ❌ Blocked | ❌ Blocked |<br />
+<br />
+---<br />
+<br />
+## 15. Role &amp; Granular Permission Management Portal (`/roles_permissions`)<br />
+<br />
+Accessible **ONLY** to logged-in users with **Super Admin** or **Admin** roles via the sidebar navigation item **&quot;Role &amp; Permission&quot;** under *Account &amp; System Help*.<br />
+<br />
+```<br />
++-----------------------------------------------------------------------------------+<br />
+| ROLE &amp; GRANULAR PERMISSION MANAGEMENT PORTAL                                      |<br />
++-----------------------------------------------------------------------------------+<br />
+| [ User Roles &amp; Permissions (Give/Deny) ] [ Default Role Matrix ] [ Permission Registry ] |<br />
++-----------------------------------------------------------------------------------+<br />
+|  USER ROLES &amp; PERMISSIONS TABLE                                                   |<br />
+|  #ID | Username    | Full Name       | Assigned Role | Status  | Permissions Badges|<br />
+|  #1  | admin       | System Admin    | Super Admin   | Active  | Full System Access|<br />
+|  #2  | ezeab       | Eze Abayomi     | Super Admin   | Active  | Full System Access|<br />
+|  #3  | officer_jo  | Joseph Okafor   | Command User  | Active  | 3 Granted, 1 Denied|<br />
+|                                                                                   |<br />
+|  [ MANAGE ROLE &amp; PERMISSIONS BUTTON ] -&gt; Opens Give / Deny Permission Editor Modal |<br />
++-----------------------------------------------------------------------------------+<br />
+```<br />
+<br />
+### Key Capabilities:<br />
+1. **Per-User Permission Overrides (Give or Deny)**:<br />
+   - System Administrators can select any new or existing user account and explicitly **GRANT** or **DENY** specific system permissions (`view_dashboard`, `search_personnel`, `edit_posting`, `bulk_posting`, `manage_disciplinary`, `view_analytics`, `view_reports`, `manage_users`, `system_settings`, `roles_permissions`, `api_access`).<br />
+   - Explicit per-user overrides take precedence over standard role defaults.<br />
+2. **Account Status &amp; System Role Updates**:<br />
+   - Change assigned system roles dynamically (e.g. promote standard User to Command Admin or SHQ Admin).<br />
+   - Enable or suspend user accounts in real time.<br />
+3. **Default Role Permission Matrix**:<br />
+   - Customize default baseline permissions granted to each system role.<br />
+4. **System Permission Registry**:<br />
+   - Register custom permissions and module keys.<br />
+<br />
+---<br />
+<br />
+### Official Release &amp; System Verification<br />
+*Nigeria Immigration Service &amp;bull; Personnel Posting Management System (NIS-PPMS) v2.4*<br />
+
+</body>
+</html>

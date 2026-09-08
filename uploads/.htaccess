@@ -1,0 +1,20 @@
+# Prevent execution of any script in the uploads directory, regardless of
+# extension. This is the second, independent layer of defense against
+# malicious file uploads (a validation bug in any upload handler, now or in
+# the future, cannot become remote code execution if scripts can't run here).
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+<FilesMatch "\.(php|php3|php4|php5|php7|phtml|pht|phar|cgi|pl|py|asp|aspx|sh|exe)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

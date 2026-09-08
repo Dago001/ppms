@@ -1,0 +1,197 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: 
+        linear-gradient(
+            135deg,
+            rgba(46, 125, 50, 0.97),
+            rgba(27, 94, 32, 0.90)
+        ),
+        url('../images/tech_building.jpg') no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navigation Styles */
+.navbar {
+    backdrop-filter: blur(10px);
+}
+
+.navbar-brand {
+    transition: transform 0.3s ease;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+}
+
+.hover-effect {
+    transition: all 0.3s ease;
+}
+
+.hover-effect:hover {
+    filter: brightness(1.2);
+}
+
+.btn-outline-light {
+    border-width: 2px;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-light:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+h2.display-4 {
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 2rem;
+}
+
+.border-success {
+    border-color: #ffffff !important;
+    opacity: 0.8;
+}
+
+h2.display-4 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.required-field::after {
+    content: "*";
+    color: #dc3545;
+    margin-left: 4px;
+    font-size: 0.85rem;
+}
+
+/* Additional Spacing Improvements */
+.row {
+    margin-left: -1rem;
+    margin-right: -1rem;
+}
+
+.col-md-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* Input Placeholder Styling */
+.form-control::placeholder {
+    color: #adb5bd;
+    font-size: 0.9rem;
+}
+
+/* Remove Button Styling */
+.remove-posting {
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+/* Loading Pulse Animation */
+.loading-pulse {
+    width: 40px;
+    height: 40px;
+    background-color: #198754;
+    border-radius: 100%;
+    display: inline-block;
+    animation: pulse 1.5s ease-in-out infinite;
+    opacity: 0.6;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1);
+        opacity: 0.3;
+    }
+    100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+}
+
+.remove-posting:hover {
+    background-color: #dc3545;
+    color: white;
+    transform: rotate(90deg);
+}
+
+/* Add Posting Button Enhancement */
+#addPosting {
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#addPosting::before {
+    content: '+';
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Alert Enhancements */
+.alert-success {
+    background-color: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    color: #1b5e20;
+}
+
+.alert-danger {
+    background-color: #ffeaea;
+    border-left: 4px solid #dc3545;
+    color: #dc3545;
+}
+
+/* Select Element Enhancement */
+select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%232e7d32' viewBox='0 0 16 16'%3E%3Cpath d='M8 11.5l-5-5h10l-5 5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+}
+
+/* Card Title Enhancement */
+.card-header h5 {
+    font-size: 1.25rem;
+    margin: 0;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* Submit Button Container */
+.submit-container {
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.submit-container .btn {
+    min-width: 200px;
+}
