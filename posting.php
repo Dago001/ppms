@@ -9,12 +9,18 @@ if (!isLoggedIn()) {
     exit();
 }
 
-$canPost = canInitiatePosting($_SESSION['user_id']);
-
-$pageTitle = 'Officer Posting Management';
-include 'includes/header.php';
+// This page (and its ajax2/get_postings.php + ajax2/get_commands.php AJAX
+// endpoints) predates the current tbl_emppersonal/tbl_employment schema -
+// it targets a `commands`/`personnel`/`user_commands` table set that no
+// longer exists, calls helper functions (getDashboardStats(), getUserRole(),
+// etc.) that were never migrated over, and requires includes/functions.php,
+// which doesn't exist either. It isn't linked from any current navigation;
+// officer posting is handled by search.php + editp.php, and this stats view
+// by dashboard.php. Redirect rather than let it fatal for anyone who still
+// has this URL bookmarked.
+header('Location: dashboard');
+exit();
 ?>
-
 <style>
     .posting-container {
         padding: 20px;

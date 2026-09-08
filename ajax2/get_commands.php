@@ -1,13 +1,21 @@
 <?php
+// Predates the current schema (targets a `commands` table and
+// includes/functions.php, neither of which exist anymore) and isn't called
+// from anywhere in the current UI - posting.php, its only caller, now
+// redirects to dashboard.php. Fail gracefully instead of fataling for anyone
+// who still has this endpoint bookmarked/cached.
 session_start();
 require_once '../includes/config.php';
-require_once '../includes/functions.php';
 
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
     echo json_encode([]);
     exit();
 }
+
+header('Content-Type: application/json');
+echo json_encode([]);
+exit();
 
 $zoneId = intval($_POST['zone_id'] ?? 0);
 

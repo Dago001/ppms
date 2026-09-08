@@ -1,12 +1,19 @@
 <?php
+// Predates the current schema (targets a `commands`/`user_commands` table
+// set and includes/functions.php, neither of which exist anymore) and isn't
+// called from anywhere in the current UI - posting.php, its only caller, now
+// redirects to dashboard.php. Fail gracefully instead of fataling for anyone
+// who still has this endpoint bookmarked/cached.
 session_start();
 require_once '../includes/config.php';
-require_once '../includes/functions.php';
 
 if (!isset($_SESSION['user_id'])) {
     echo '<div style="color: red; text-align: center; padding: 2rem;">Please login</div>';
     exit();
 }
+
+echo '<div style="text-align: center; padding: 2rem; color: #94a3b8;">This view is no longer available. Please use the Personnel Search page.</div>';
+exit();
 
 $commandId = intval($_POST['command_id'] ?? 0);
 

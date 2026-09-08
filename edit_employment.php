@@ -88,23 +88,13 @@ if ($isUserRole || !verifyRecordToken($serviceNo, $token)) {
 }
 
 
-// Create database connection
-$pdo_idcard = null;
+// Use the app's single shared connection (there is no separate $db_config -
+// that array was never defined anywhere in this codebase, so every PDO
+// connection attempt built from it always failed).
+$pdo_idcard = $pdo;
 
 try {
-    // Create connection to niimscom_idcard database
-    $pdo_idcard = new PDO(
-        "mysql:host={$db_config['niimscom_idcard']['host']};dbname={$db_config['niimscom_idcard']['dbname']};charset=utf8mb4",
-        $db_config['niimscom_idcard']['username'],
-        $db_config['niimscom_idcard']['password'],
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false
-        ]
-    );
-    
-    // Fetch employment data from niimscom_idcard database
+    // Fetch employment data
     $stmt = $pdo_idcard->prepare("
         SELECT 
             e.serviceNo,
@@ -206,16 +196,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !validateCSRFToken($_POST['csrf_tok
     }
 
     try {
-        // Re-establish connection if not already established
-        if (!$pdo_idcard) {
-            $pdo_idcard = new PDO(
-                "mysql:host={$db_config['niimscom_idcard']['host']};dbname={$db_config['niimscom_idcard']['dbname']};charset=utf8mb4",
-                $db_config['niimscom_idcard']['username'],
-                $db_config['niimscom_idcard']['password'],
-                [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-            );
-        }
-        
         // Store old values for comparison
         $oldPosting = '';
         if ($current_posting_data) {

@@ -1,6 +1,18 @@
 # ============================================
 # NIS-PPMS Extensionless Routing & Apache Security Engine
 # ============================================
+
+# Block direct web access to internal-only directories. None of these are
+# meant to be requested by a browser: includes/ holds config/secrets-loading
+# code, database/ and scratch/ hold unauthenticated one-off setup/maintenance
+# scripts (some of which echo API keys or run schema changes with no login
+# check at all), storage/ and cron/ are server-side-only. ajax/, ajax2/, api/
+# are deliberately NOT in this list - the live app's own JS calls those.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(includes|database|scratch|storage|cron)/ - [F,L]
+</IfModule>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
