@@ -45,6 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 'auto_sms_enabled' => [isset($_POST['auto_sms_enabled']) ? '1' : '0', 'notifications'],
                 'auto_email_enabled' => [isset($_POST['auto_email_enabled']) ? '1' : '0', 'notifications'],
+                'brevo_api_key' => [trim($_POST['brevo_api_key'] ?? ''), 'notifications'],
+                'brevo_sender_email' => [trim($_POST['brevo_sender_email'] ?? ''), 'notifications'],
+                'brevo_sender_name' => [trim($_POST['brevo_sender_name'] ?? 'NIS Posting Management System'), 'notifications'],
                 'smtp_host' => [trim($_POST['smtp_host'] ?? ''), 'notifications'],
                 'smtp_port' => [min(max(intval($_POST['smtp_port'] ?? 587), 1), 65535), 'notifications'],
                 'smtp_username' => [trim($_POST['smtp_username'] ?? ''), 'notifications'],
@@ -123,8 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // 4. Send Test Email - verifies SMTP credentials (as typed, not necessarily
-    // saved yet) by actually connecting and sending a real message.
+    // 4. Send Test Email - verifies Brevo (preferred) or SMTP credentials (as
+    // typed, not necessarily saved yet) by actually sending a real message.
     elseif (isset($_POST['action']) && $_POST['action'] === 'send_test_email') {
         if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
             $message = "Security Token Validation Failed.";
@@ -133,17 +136,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once __DIR__ . '/includes/NotificationService.php';
             $testRecipient = trim($_POST['test_email_recipient'] ?? '');
             $notificationService = new NotificationService($pdo);
-            $testResult = $notificationService->testSMTPConnection(
-                trim($_POST['smtp_host'] ?? ''),
-                intval($_POST['smtp_port'] ?? 587),
-                trim($_POST['smtp_username'] ?? ''),
-                trim($_POST['smtp_password'] ?? ''),
-                $_POST['smtp_encryption'] ?? 'tls',
-                $testRecipient
-            );
+            $brevoKeyTyped = trim($_POST['brevo_api_key'] ?? '');
+
+            if (!empty($brevoKeyTyped)) {
+                $testResult = $notificationService->testBrevoConnection(
+                    $brevoKeyTyped,
+                    trim($_POST['brevo_sender_email'] ?? ''),
+                    trim($_POST['brevo_sender_name'] ?? ''),
+                    $testRecipient
+                );
+                $providerLabel = 'Brevo';
+            } else {
+                $testResult = $notificationService->testSMTPConnection(
+                    trim($_POST['smtp_host'] ?? ''),
+                    intval($_POST['smtp_port'] ?? 587),
+                    trim($_POST['smtp_username'] ?? ''),
+                    trim($_POST['smtp_password'] ?? ''),
+                    $_POST['smtp_encryption'] ?? 'tls',
+                    $testRecipient
+                );
+                $providerLabel = 'SMTP';
+            }
+
             $message = $testResult['success']
-                ? "Test email sent successfully to {$testRecipient}. Check that inbox to confirm delivery."
-                : "SMTP test failed: " . $testResult['response'];
+                ? "Test email sent successfully via {$providerLabel} to {$testRecipient}. Check that inbox to confirm delivery."
+                : "{$providerLabel} test failed: " . $testResult['response'];
             $messageType = $testResult['success'] ? "success" : "danger";
         }
     }
@@ -406,7 +423,30 @@ $csrfToken = generateCSRFToken();
                         </label>
                     </div>
 
-                    <div class="form-grid" style="margin-top:1rem;">
+                    <div style="margin-top:1.25rem; padding:0.6rem 0.85rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; font-size:0.8rem; color:#1e40af;">
+                        <i class="fas fa-bolt"></i> <strong>Brevo (recommended)</strong> is tried first if an API key is set below. It uses a plain HTTPS API instead of SMTP ports, which most shared hosting blocks or restricts - this is why SMTP alone often silently fails. Free tier: 300 emails/day. Sign up at <strong>brevo.com</strong>, verify a sender, then create a transactional API key.
+                    </div>
+                    <div class="form-grid" style="margin-top:0.75rem;">
+                        <div class="form-group">
+                            <label>Brevo API Key</label>
+                            <input type="password" name="brevo_api_key" class="form-control" placeholder="xkeysib-..." value="<?php echo htmlspecialchars($notif['brevo_api_key'] ?? ''); ?>">
+                            <small style="color:#64748b;">Brevo dashboard &rarr; Settings &rarr; SMTP &amp; API &rarr; API Keys.</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Sender Email</label>
+                            <input type="email" name="brevo_sender_email" class="form-control" placeholder="noreply@yourdomain.com" value="<?php echo htmlspecialchars($notif['brevo_sender_email'] ?? ''); ?>">
+                            <small style="color:#64748b;">Must be a verified sender/domain in your Brevo account.</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Sender Name</label>
+                            <input type="text" name="brevo_sender_name" class="form-control" placeholder="NIS Posting Management System" value="<?php echo htmlspecialchars($notif['brevo_sender_name'] ?? 'NIS Posting Management System'); ?>">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:1.25rem; padding:0.6rem 0.85rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-size:0.8rem; color:#475569;">
+                        <i class="fas fa-life-ring"></i> <strong>SMTP (fallback)</strong> - only used when the Brevo API Key above is blank. Kept for hosts where outbound SMTP genuinely isn't blocked.
+                    </div>
+                    <div class="form-grid" style="margin-top:0.75rem;">
                         <div class="form-group">
                             <label>SMTP Host</label>
                             <input type="text" name="smtp_host" class="form-control" placeholder="e.g. smtp.gmail.com or mail.yourdomain.com" value="<?php echo htmlspecialchars($notif['smtp_host'] ?? ''); ?>">
@@ -452,7 +492,7 @@ $csrfToken = generateCSRFToken();
                         <div class="form-group">
                             <label>Send Test Email To</label>
                             <input type="email" name="test_email_recipient" class="form-control" placeholder="you@example.com">
-                            <small style="color:#64748b;">Uses the SMTP fields above exactly as currently typed (they don't need to be saved first).</small>
+                            <small style="color:#64748b;">Uses whatever is currently typed above (Brevo if the API Key field is filled in, otherwise SMTP) - nothing needs to be saved first.</small>
                         </div>
                         <div class="form-group">
                             <button type="submit" name="action" value="send_test_email" class="btn-save" style="background:#2563eb;"><i class="fas fa-paper-plane"></i> Send Test Email</button>

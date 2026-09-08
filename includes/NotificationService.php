@@ -429,11 +429,17 @@ class NotificationService {
 
         // Log email attempt
         $logId = $this->logEmail($email, $name, $subject, $body, $type, $serviceNo, $attachment, 'pending');
-        
-        // Try to send via SMTP
+
         try {
-            $response = $this->sendViaSMTP($email, $name, $subject, $body, $attachment);
-            
+            // Prefer Brevo (HTTP API over port 443) when configured - shared
+            // hosting very commonly blocks/throttles outbound SMTP ports
+            // (25/465/587) at the network level regardless of how correct the
+            // credentials are, while normal outbound HTTPS almost always works.
+            $brevoApiKey = getSystemSetting('brevo_api_key', '');
+            $response = !empty($brevoApiKey)
+                ? $this->sendViaBrevoConfigured($email, $name, $subject, $body)
+                : $this->sendViaSMTP($email, $name, $subject, $body, $attachment);
+
             if ($response['success']) {
                 $this->updateEmailLog($logId, 'sent', $response['response']);
                 return ['success' => true, 'message' => 'Email sent successfully', 'log_id' => $logId];
@@ -446,12 +452,82 @@ class NotificationService {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
-    
+
+    // ============================================
+    // BREVO (transactional email HTTP API) - PREFERRED EMAIL PROVIDER
+    // ============================================
+
+    private function sendViaBrevoConfigured($toEmail, $toName, $subject, $body) {
+        $apiKey = getSystemSetting('brevo_api_key', '');
+        if (empty($apiKey)) {
+            return ['success' => false, 'response' => 'Brevo API key not configured in System Settings.'];
+        }
+        $senderEmail = getSystemSetting('brevo_sender_email', $this->emailFrom);
+        $senderName = getSystemSetting('brevo_sender_name', $this->emailFromName);
+        return $this->sendViaBrevo($apiKey, $senderEmail, $senderName, $toEmail, $toName, $subject, $body);
+    }
+
+    private function sendViaBrevo($apiKey, $senderEmail, $senderName, $toEmail, $toName, $subject, $body) {
+        $payload = [
+            'sender' => ['name' => $senderName, 'email' => $senderEmail],
+            'to' => [['email' => $toEmail, 'name' => $toName ?: $toEmail]],
+            'subject' => $subject,
+            'htmlContent' => $body
+        ];
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => 'https://api.brevo.com/v3/smtp/email',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_HTTPHEADER => [
+                'accept: application/json',
+                'api-key: ' . $apiKey,
+                'content-type: application/json'
+            ],
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 10
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            return ['success' => false, 'response' => 'cURL error reaching Brevo: ' . $error];
+        }
+
+        $result = json_decode($response, true);
+        if (($httpCode === 200 || $httpCode === 201) && isset($result['messageId'])) {
+            return ['success' => true, 'response' => 'Email sent successfully via Brevo (messageId: ' . $result['messageId'] . ')'];
+        }
+
+        $errMsg = $result['message'] ?? $response;
+        return ['success' => false, 'response' => "Brevo error (HTTP {$httpCode}): {$errMsg}"];
+    }
+
+    /**
+     * Test Brevo credentials directly (bypassing System Settings, so unsaved
+     * form values can be verified before committing them) by sending a real
+     * confirmation email to $toEmail. Used by the "Send Test Email" button.
+     */
+    public function testBrevoConnection($apiKey, $senderEmail, $senderName, $toEmail) {
+        if (empty($apiKey) || empty($senderEmail) || empty($toEmail)) {
+            return ['success' => false, 'response' => 'API key, sender email, and a recipient address are all required.'];
+        }
+        $subject = "NIS-PPMS Brevo Test - " . date('Y-m-d H:i:s');
+        $body = "<p>This is a test email from the NIS Personnel Posting Management System's notification settings page.</p>"
+              . "<p>If you received this, Brevo email delivery is working correctly and officer posting notifications will be delivered by email.</p>";
+        return $this->sendViaBrevo($apiKey, $senderEmail, $senderName ?: 'NIS Posting Management System', $toEmail, $toEmail, $subject, $body);
+    }
+
     /**
      * Test an SMTP connection/credentials directly (bypassing System Settings,
      * so unsaved form values can be verified before committing them) and, on
      * success, send a real confirmation email to $toEmail. Used by the "Send
-     * Test Email" button on the System Settings page.
+     * Test Email" button on the System Settings page (fallback path when
+     * Brevo isn't configured).
      */
     public function testSMTPConnection($host, $port, $username, $password, $encryption, $toEmail) {
         if (empty($host) || empty($username) || empty($password) || empty($toEmail)) {
