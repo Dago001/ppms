@@ -447,6 +447,21 @@ class NotificationService {
         }
     }
     
+    /**
+     * Test an SMTP connection/credentials directly (bypassing System Settings,
+     * so unsaved form values can be verified before committing them) and, on
+     * success, send a real confirmation email to $toEmail. Used by the "Send
+     * Test Email" button on the System Settings page.
+     */
+    public function testSMTPConnection($host, $port, $username, $password, $encryption, $toEmail) {
+        if (empty($host) || empty($username) || empty($password) || empty($toEmail)) {
+            return ['success' => false, 'response' => 'Host, username, password, and a recipient address are all required.'];
+        }
+        $subject = "NIS-PPMS SMTP Test - " . date('Y-m-d H:i:s');
+        $body = "This is a test email from the NIS Personnel Posting Management System's notification settings page.\n\nIf you received this, your SMTP configuration is working correctly and officer posting notifications will be delivered by email.";
+        return $this->sendViaSocketSMTP($host, (int)$port, $username, $password, $encryption, $toEmail, $subject, nl2br(htmlspecialchars($body)));
+    }
+
     private function sendViaSMTP($toEmail, $toName, $subject, $body, $attachment = null) {
         $host = getSystemSetting('smtp_host', $this->smtpConfig['host'] ?? '');
         $port = intval(getSystemSetting('smtp_port', $this->smtpConfig['port'] ?? 587));

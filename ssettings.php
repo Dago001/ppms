@@ -122,6 +122,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $messageType = "success";
         }
     }
+
+    // 4. Send Test Email - verifies SMTP credentials (as typed, not necessarily
+    // saved yet) by actually connecting and sending a real message.
+    elseif (isset($_POST['action']) && $_POST['action'] === 'send_test_email') {
+        if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+            $message = "Security Token Validation Failed.";
+            $messageType = "danger";
+        } else {
+            require_once __DIR__ . '/includes/NotificationService.php';
+            $testRecipient = trim($_POST['test_email_recipient'] ?? '');
+            $notificationService = new NotificationService($pdo);
+            $testResult = $notificationService->testSMTPConnection(
+                trim($_POST['smtp_host'] ?? ''),
+                intval($_POST['smtp_port'] ?? 587),
+                trim($_POST['smtp_username'] ?? ''),
+                trim($_POST['smtp_password'] ?? ''),
+                $_POST['smtp_encryption'] ?? 'tls',
+                $testRecipient
+            );
+            $message = $testResult['success']
+                ? "Test email sent successfully to {$testRecipient}. Check that inbox to confirm delivery."
+                : "SMTP test failed: " . $testResult['response'];
+            $messageType = $testResult['success'] ? "success" : "danger";
+        }
+    }
 }
 
 // Fetch all current settings
@@ -421,6 +446,17 @@ $csrfToken = generateCSRFToken();
                             <input type="checkbox" name="inapp_bell_alerts_enabled" value="1" <?php echo ($notif['inapp_bell_alerts_enabled'] ?? '1') === '1' ? 'checked' : ''; ?>>
                             <span class="slider"></span>
                         </label>
+                    </div>
+
+                    <div class="form-grid" style="margin-top:1rem; align-items:end;">
+                        <div class="form-group">
+                            <label>Send Test Email To</label>
+                            <input type="email" name="test_email_recipient" class="form-control" placeholder="you@example.com">
+                            <small style="color:#64748b;">Uses the SMTP fields above exactly as currently typed (they don't need to be saved first).</small>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" name="action" value="send_test_email" class="btn-save" style="background:#2563eb;"><i class="fas fa-paper-plane"></i> Send Test Email</button>
+                        </div>
                     </div>
 
                     <hr style="margin: 1.5rem 0; border:0; border-top:1px solid #e2e8f0;">
