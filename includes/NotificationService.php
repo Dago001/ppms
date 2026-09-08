@@ -304,9 +304,14 @@ class NotificationService {
             'type' => 'plain',
             'channel' => $config['channel']
         ];
-        
+
+        // Termii's base URL is just the domain root (returns 404 on its own,
+        // confirmed live against v4.api.termii.com) - the actual SMS-send
+        // route is /api/sms/send.
+        $sendUrl = rtrim($config['api_url'], '/') . '/api/sms/send';
+
         curl_setopt_array($curl, [
-            CURLOPT_URL => $config['api_url'],
+            CURLOPT_URL => $sendUrl,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => json_encode($postData),
