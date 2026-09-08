@@ -45,6 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 'auto_sms_enabled' => [isset($_POST['auto_sms_enabled']) ? '1' : '0', 'notifications'],
                 'auto_email_enabled' => [isset($_POST['auto_email_enabled']) ? '1' : '0', 'notifications'],
+                'smtp_host' => [trim($_POST['smtp_host'] ?? ''), 'notifications'],
+                'smtp_port' => [min(max(intval($_POST['smtp_port'] ?? 587), 1), 65535), 'notifications'],
+                'smtp_username' => [trim($_POST['smtp_username'] ?? ''), 'notifications'],
+                'smtp_password' => [trim($_POST['smtp_password'] ?? ''), 'notifications'],
+                'smtp_encryption' => [in_array($_POST['smtp_encryption'] ?? 'tls', ['tls', 'ssl', 'none'], true) ? $_POST['smtp_encryption'] : 'tls', 'notifications'],
                 'inapp_bell_alerts_enabled' => [isset($_POST['inapp_bell_alerts_enabled']) ? '1' : '0', 'notifications'],
                 'whatsapp_enabled' => [isset($_POST['whatsapp_enabled']) ? '1' : '0', 'notifications'],
                 'whatsapp_phone_number_id' => [trim($_POST['whatsapp_phone_number_id'] ?? ''), 'notifications'],
@@ -374,6 +379,37 @@ $csrfToken = generateCSRFToken();
                             <input type="checkbox" name="auto_email_enabled" value="1" <?php echo ($notif['auto_email_enabled'] ?? '1') === '1' ? 'checked' : ''; ?>>
                             <span class="slider"></span>
                         </label>
+                    </div>
+
+                    <div class="form-grid" style="margin-top:1rem;">
+                        <div class="form-group">
+                            <label>SMTP Host</label>
+                            <input type="text" name="smtp_host" class="form-control" placeholder="e.g. smtp.gmail.com or mail.yourdomain.com" value="<?php echo htmlspecialchars($notif['smtp_host'] ?? ''); ?>">
+                            <small style="color:#64748b;">Leave blank to fall back to the server's local mail() - usually unreliable, often filtered as spam.</small>
+                        </div>
+                        <div class="form-group">
+                            <label>SMTP Port</label>
+                            <input type="number" name="smtp_port" class="form-control" placeholder="587" value="<?php echo htmlspecialchars($notif['smtp_port'] ?? '587'); ?>">
+                            <small style="color:#64748b;">587 for TLS (most common), 465 for SSL.</small>
+                        </div>
+                        <div class="form-group">
+                            <label>SMTP Username</label>
+                            <input type="text" name="smtp_username" class="form-control" placeholder="e.g. noreply@yourdomain.com" value="<?php echo htmlspecialchars($notif['smtp_username'] ?? ''); ?>">
+                        </div>
+                        <div class="form-group">
+                            <label>SMTP Password</label>
+                            <input type="password" name="smtp_password" class="form-control" placeholder="App password or mailbox password" value="<?php echo htmlspecialchars($notif['smtp_password'] ?? ''); ?>">
+                            <small style="color:#64748b;">For Gmail, this must be a 16-character App Password, not your normal login password.</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Encryption</label>
+                            <select name="smtp_encryption" class="form-control">
+                                <?php $curEnc = $notif['smtp_encryption'] ?? 'tls'; ?>
+                                <option value="tls" <?php echo $curEnc === 'tls' ? 'selected' : ''; ?>>TLS</option>
+                                <option value="ssl" <?php echo $curEnc === 'ssl' ? 'selected' : ''; ?>>SSL</option>
+                                <option value="none" <?php echo $curEnc === 'none' ? 'selected' : ''; ?>>None</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="toggle-wrapper">

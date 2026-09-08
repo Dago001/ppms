@@ -448,64 +448,28 @@ class NotificationService {
     }
     
     private function sendViaSMTP($toEmail, $toName, $subject, $body, $attachment = null) {
-        $host = getSystemSetting('smtp_host', $this->smtpConfig['host'] ?? 'smtp.gmail.com');
+        $host = getSystemSetting('smtp_host', $this->smtpConfig['host'] ?? '');
         $port = intval(getSystemSetting('smtp_port', $this->smtpConfig['port'] ?? 587));
         $username = getSystemSetting('smtp_username', $this->smtpConfig['username'] ?? '');
         $password = getSystemSetting('smtp_password', $this->smtpConfig['password'] ?? '');
         $encryption = getSystemSetting('smtp_encryption', $this->smtpConfig['encryption'] ?? 'tls');
 
-        // Check if real SMTP credentials are configured
-        if (!empty($username) && !empty($password) && strpos($username, 'your-email') === false) {
-            try {
-                $socketHost = ($encryption === 'ssl' ? 'ssl://' : '') . $host;
-                $socket = @fsockopen($socketHost, $port, $errno, $errstr, 10);
-                if ($socket) {
-                    fgets($socket, 512);
-                    fputs($socket, "EHLO " . gethostname() . "\r\n");
-                    fgets($socket, 512);
-
-                    if ($encryption === 'tls') {
-                        fputs($socket, "STARTTLS\r\n");
-                        fgets($socket, 512);
-                        stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
-                        fputs($socket, "EHLO " . gethostname() . "\r\n");
-                        fgets($socket, 512);
-                    }
-
-                    fputs($socket, "AUTH LOGIN\r\n");
-                    fgets($socket, 512);
-                    fputs($socket, base64_encode($username) . "\r\n");
-                    fgets($socket, 512);
-                    fputs($socket, base64_encode($password) . "\r\n");
-                    $authRes = fgets($socket, 512);
-
-                    if (substr($authRes, 0, 3) === '235') {
-                        fputs($socket, "MAIL FROM: <$username>\r\n");
-                        fgets($socket, 512);
-                        fputs($socket, "RCPT TO: <$toEmail>\r\n");
-                        fgets($socket, 512);
-                        fputs($socket, "DATA\r\n");
-                        fgets($socket, 512);
-
-                        $headers = "MIME-Version: 1.0\r\n";
-                        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-                        $headers .= "From: {$this->emailFromName} <$username>\r\n";
-                        $headers .= "To: <$toEmail>\r\n";
-                        $headers .= "Subject: $subject\r\n\r\n";
-
-                        fputs($socket, $headers . $body . "\r\n.\r\n");
-                        fgets($socket, 512);
-                        fputs($socket, "QUIT\r\n");
-                        fclose($socket);
-
-                        return ['success' => true, 'response' => 'Email sent successfully via Socket SMTP'];
-                    }
-                    fclose($socket);
-                }
-            } catch (Exception $e) {}
+        // Check if real SMTP credentials are configured (System Settings -> Notifications)
+        if (!empty($host) && !empty($username) && !empty($password) && strpos($username, 'your-email') === false) {
+            $result = $this->sendViaSocketSMTP($host, $port, $username, $password, $encryption, $toEmail, $subject, $body);
+            if ($result['success']) {
+                return $result;
+            }
+            // Real SMTP is configured but failed - report that failure honestly rather
+            // than silently falling through to mail() and calling it a success.
+            error_log("SMTP send failed for {$toEmail}: " . $result['response']);
+            return $result;
         }
 
-        // Fallback to error-suppressed PHP mail()
+        // No real SMTP configured - last-resort fallback to the server's local mail().
+        // This commonly fails outright or gets spam-filtered on shared hosting without
+        // proper SPF/DKIM/PTR records, so its actual return value is what gets reported,
+        // not an assumed success.
         $headers = "MIME-Version: 1.0\r\n";
         $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
         $headers .= "From: {$this->emailFromName} <{$this->emailFrom}>\r\n";
@@ -513,11 +477,73 @@ class NotificationService {
 
         $sent = @mail($toEmail, $subject, $body, $headers);
         if ($sent) {
-            return ['success' => true, 'response' => 'Email sent via PHP mail()'];
+            return ['success' => true, 'response' => 'Email handed to server mail() - delivery is not guaranteed without SMTP credentials configured in System Settings.'];
         }
 
-        // Return success for real-time logged email dispatch
-        return ['success' => true, 'response' => 'Email dispatched to system log queue'];
+        return ['success' => false, 'response' => 'No SMTP credentials configured in System Settings, and the server\'s local mail() rejected the message.'];
+    }
+
+    /**
+     * Speak raw SMTP over a socket, checking the server's response code after
+     * every command instead of assuming success once AUTH succeeds.
+     */
+    private function sendViaSocketSMTP($host, $port, $username, $password, $encryption, $toEmail, $subject, $body) {
+        $socketHost = ($encryption === 'ssl' ? 'ssl://' : '') . $host;
+        $socket = @fsockopen($socketHost, $port, $errno, $errstr, 10);
+        if (!$socket) {
+            return ['success' => false, 'response' => "Could not connect to {$host}:{$port} - {$errstr} ({$errno})"];
+        }
+
+        $read = function() use ($socket) { return fgets($socket, 512); };
+        $expect = function($code) use ($read) {
+            $line = $read();
+            return $line !== false && substr($line, 0, 3) === (string)$code ? $line : false;
+        };
+
+        $read(); // greeting
+        fputs($socket, "EHLO " . gethostname() . "\r\n");
+        $read();
+
+        if ($encryption === 'tls') {
+            fputs($socket, "STARTTLS\r\n");
+            if (!$expect(220)) { fclose($socket); return ['success' => false, 'response' => 'STARTTLS was rejected by the server']; }
+            if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                fclose($socket);
+                return ['success' => false, 'response' => 'TLS handshake failed'];
+            }
+            fputs($socket, "EHLO " . gethostname() . "\r\n");
+            $read();
+        }
+
+        fputs($socket, "AUTH LOGIN\r\n");
+        if (!$expect(334)) { fclose($socket); return ['success' => false, 'response' => 'Server did not offer AUTH LOGIN']; }
+        fputs($socket, base64_encode($username) . "\r\n");
+        if (!$expect(334)) { fclose($socket); return ['success' => false, 'response' => 'SMTP username rejected']; }
+        fputs($socket, base64_encode($password) . "\r\n");
+        if (!$expect(235)) { fclose($socket); return ['success' => false, 'response' => 'SMTP authentication failed - check smtp_username/smtp_password in System Settings']; }
+
+        fputs($socket, "MAIL FROM: <$username>\r\n");
+        if (!$expect(250)) { fclose($socket); return ['success' => false, 'response' => 'MAIL FROM rejected by server']; }
+        fputs($socket, "RCPT TO: <$toEmail>\r\n");
+        if (!$expect(250)) { fclose($socket); return ['success' => false, 'response' => "RCPT TO rejected by server for {$toEmail}"]; }
+        fputs($socket, "DATA\r\n");
+        if (!$expect(354)) { fclose($socket); return ['success' => false, 'response' => 'DATA command rejected by server']; }
+
+        $headers = "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $headers .= "From: {$this->emailFromName} <$username>\r\n";
+        $headers .= "To: <$toEmail>\r\n";
+        $headers .= "Subject: $subject\r\n\r\n";
+
+        fputs($socket, $headers . $body . "\r\n.\r\n");
+        $sent = (bool)$expect(250);
+        fputs($socket, "QUIT\r\n");
+        fclose($socket);
+
+        if (!$sent) {
+            return ['success' => false, 'response' => 'Server did not confirm the message was accepted after DATA'];
+        }
+        return ['success' => true, 'response' => 'Email sent successfully via SMTP'];
     }
     
     // ============================================
