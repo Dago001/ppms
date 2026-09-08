@@ -164,6 +164,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $messageType = $testResult['success'] ? "success" : "danger";
         }
     }
+
+    // 5. Test Outbound HTTPS Connectivity - checks whether this server can
+    // reach external APIs at all (Brevo, Termii, and a neutral control
+    // endpoint), so a networking problem isn't mistaken for a credentials
+    // problem or vice versa.
+    elseif (isset($_POST['action']) && $_POST['action'] === 'test_connectivity') {
+        if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+            $message = "Security Token Validation Failed.";
+            $messageType = "danger";
+        } else {
+            $targets = [
+                'Brevo API (api.brevo.com)' => 'https://api.brevo.com/v3/account',
+                'Termii API (v4.api.termii.com)' => 'https://v4.api.termii.com/api/get-balance',
+                'Control (cloudflare.com)' => 'https://www.cloudflare.com',
+            ];
+            $lines = [];
+            $anyReached = false;
+            foreach ($targets as $label => $url) {
+                $ch = curl_init();
+                curl_setopt_array($ch, [
+                    CURLOPT_URL => $url,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_NOBODY => true,
+                    CURLOPT_CONNECTTIMEOUT => 6,
+                    CURLOPT_TIMEOUT => 10,
+                ]);
+                curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $err = curl_error($ch);
+                curl_close($ch);
+
+                if ($httpCode > 0) {
+                    $lines[] = "&#10003; {$label}: reached (HTTP {$httpCode})";
+                    $anyReached = true;
+                } else {
+                    $lines[] = "&#10007; {$label}: FAILED - " . htmlspecialchars($err ?: 'no response');
+                }
+            }
+            $message = ($anyReached ? "Outbound HTTPS works from this server. Per-target results:<br>" : "This server could NOT reach ANY external HTTPS endpoint - outbound connections may be fully blocked at the hosting/firewall level. Contact your host. Details:<br>")
+                     . implode('<br>', $lines);
+            $messageType = $anyReached ? "success" : "danger";
+        }
+    }
 }
 
 // Fetch all current settings
@@ -497,6 +540,11 @@ $csrfToken = generateCSRFToken();
                         <div class="form-group">
                             <button type="submit" name="action" value="send_test_email" class="btn-save" style="background:#2563eb;"><i class="fas fa-paper-plane"></i> Send Test Email</button>
                         </div>
+                    </div>
+
+                    <div style="margin-top:0.75rem;">
+                        <button type="submit" name="action" value="test_connectivity" class="btn-save" style="background:#475569;"><i class="fas fa-network-wired"></i> Test Outbound HTTPS Connectivity</button>
+                        <small style="color:#64748b; display:block; margin-top:0.35rem;">Checks whether this server can reach external APIs at all, before troubleshooting credentials. Run this first if every provider keeps failing.</small>
                     </div>
 
                     <hr style="margin: 1.5rem 0; border:0; border-top:1px solid #e2e8f0;">
